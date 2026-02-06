@@ -2,6 +2,11 @@
 class DeadwoodGame : IGameInstance {
     private Func<int, int[], bool>[] commands;
     private UIQueue out_queue;
+    private int active_player;
+    private Player[] players; //2-8 players
+    private Board board;
+    private Deck deck;
+
 
     DeadwoodGame() {
         commands = [
@@ -30,5 +35,41 @@ class DeadwoodGame : IGameInstance {
     {
         out_queue = queue;
         throw new NotImplementedException();
+    }
+
+    // Game logic methods
+    private void processMove()
+    {
+        
+    }
+
+    private void processTake()
+    {
+
+    }
+
+    private void processUpgrade()
+    {
+
+    }
+
+    private void processRehearse()
+    {
+
+    }
+
+    private void processAct()
+    {
+
+    }
+
+    private void endTurn()
+    {
+
+    }
+
+    private void endDay()
+    {
+
     }
 }

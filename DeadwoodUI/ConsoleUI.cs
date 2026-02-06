@@ -1,0 +1,31 @@
+/*  Nicole Swierstra
+ *  Console UI class
+ *  implements the deadwood console UI
+ *  
+ *  All of the UI is in just a small handful of classes. Uh this might have been a bad idea tbh.
+ */
+
+class DWConsoleUI : IGameUI
+{
+    CommandQueue applicationQueue;
+
+    public void OnUpdate()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void ProcessCommand(int cmd_id, int[] args)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Setup(CommandQueue applicationQueue)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool ShouldEnd()
+    {
+        throw new NotImplementedException();
+    }
+}

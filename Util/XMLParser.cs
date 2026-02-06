@@ -1,7 +1,9 @@
-/* Nicole Swierstra
+/* 
+ * Nicole Swierstra
  *
  * My way to make XML files more generic and not have 300 dependancies on everything 
- * Tbh tho is this even necessary in c#? java is pretty horrible but this seems fine tbh 
+ * Tbh tho is this even necessary in c#? I wrote this origionall for java but c# seems 
+ * a lot more fine tbh 
  */
 
 using System.Xml;

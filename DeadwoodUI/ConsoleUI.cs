@@ -9,6 +9,11 @@ class DWConsoleUI : IGameUI
 {
     CommandQueue applicationQueue;
 
+    public void End()
+    {
+        throw new NotImplementedException();
+    }
+
     public void OnUpdate()
     {
         throw new NotImplementedException();

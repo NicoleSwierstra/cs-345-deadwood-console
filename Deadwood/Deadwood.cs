@@ -33,7 +33,7 @@ class DeadwoodGame : IGameInstance {
         25
     };
 
-    DeadwoodGame() {
+    public DeadwoodGame() {
         
     } 
 

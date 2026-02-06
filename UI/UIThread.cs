@@ -7,6 +7,7 @@
  */
 
 class UIThread {
+    volatile private bool keep_running;
     volatile CommandQueue uiQueue, appQueue;
     volatile IGameUI ui;
     Thread ui_thread;
@@ -21,11 +22,20 @@ class UIThread {
     public UIThread Start() {
         ui_thread = new Thread(new ThreadStart(Run));
         ui_thread.Start();
+        keep_running = true;
         return this; /* for swizzling/chaining whatever */
     }
 
+    public void Stop() {
+        keep_running = false;
+    }
+
+    public void Join() {
+        ui_thread.Join();
+    }
+
     private void Run() {
-        while(!ui.ShouldEnd()) {
+        while(!ui.ShouldEnd() && keep_running) {
             /* one at a time is probably fine tbh */
             if (!uiQueue.empty()) {
                 int id = uiQueue.pop(out int[] args);
@@ -34,6 +44,8 @@ class UIThread {
 
             ui.OnUpdate();
         }
+
+        ui.End();
         /* TODO: schedule an event to send a force end message to the application */
     }
 }

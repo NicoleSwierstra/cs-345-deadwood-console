@@ -23,7 +23,7 @@ class CommandQueue {
 
     volatile Queue<Command> commands;
 
-    CommandQueue() {
+    public CommandQueue() {
         commands = new Queue<Command>();
     }
 

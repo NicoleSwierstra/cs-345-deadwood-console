@@ -1,20 +1,23 @@
-class Deck
-{
-    private SceneCard[] cards; //40 scene cards
-    public void parseXML()
-    {
-        
+class Deck {
+    private SceneCard[] cards;
+    static Random rand = new Random((int)DateTime.Now.Ticks);
+    
+    private Deck(SceneCard[] c) {
+        cards = c;
     }
 
-    public void shuffle()
-    {
-
+    public static Deck fromXML(string filepath) {
+        return new Deck([]);
     }
 
-    public SceneCard dealTop()
-    {
+    /* silly little shuffling function */
+    public Deck shuffled() {
+        rand.Shuffle(cards);
+        return this;
+    }
+
+    public SceneCard dealTop() {
         //todo
         return null;
     }
-        
 }

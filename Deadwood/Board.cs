@@ -66,4 +66,12 @@ class Board {
     public int[] getAdjacent(int tile) {
         return tiles[tile].neighbors;
     }
+
+    public bool isOffice(int space){
+        return space == office_location;
+    }
+
+    public int getTrailer() {
+        return trailer_location;
+    }
 }

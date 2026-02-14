@@ -13,6 +13,8 @@ class DeadwoodGame : IGameInstance {
     private Board board;
     private Deck deck;
 
+    private int current_day;
+
     /* ===== game consts ===== */
     /* TODO: these are stored in the xml for the board for some reason. Parse those Ig */
     readonly int[] rank_cost_dollars = [
@@ -33,6 +35,7 @@ class DeadwoodGame : IGameInstance {
         25
     };
 
+    /* blank constructor - must be implemented for  */
     public DeadwoodGame() {
         
     } 
@@ -74,9 +77,10 @@ class DeadwoodGame : IGameInstance {
             this.players[i] = new Player(players[i]);
         }
 
-        this.board = Board.fromXML("res/gamedata/board.xml");
+        deck = Deck.fromXML("res/gamedata/cards.xml").shuffled(); /* shuffled only once at the beginning of the game */
+        board = Board.fromXML("res/gamedata/board.xml");
 
-        throw new NotImplementedException();
+        endDay();
     }
 
     // Game logic methods
@@ -84,8 +88,15 @@ class DeadwoodGame : IGameInstance {
         int player_id = args[0], new_location = args[1];
         if (active_player != player_id) 
             return GameComRet.RET_ERROR;
+        int[] adj = board.getAdjacent(players[player_id].getLocation());
+        
+        for (int i = 0; i < adj.Length; i++) 
+            if (adj[i] == new_location) {
+                players[player_id].move(new_location);
+                return GameComRet.RET_SUCCESS;
+            }
 
-        return GameComRet.RET_SUCCESS;
+        return GameComRet.RET_ERROR;
     }
 
     private GameComRet processTake(int[] args) {
@@ -100,6 +111,8 @@ class DeadwoodGame : IGameInstance {
         int player_id = args[0], rank_num = args[2];
         Player.UpgradeType type = (Player.UpgradeType)args[1];
         if (active_player != player_id) 
+            return GameComRet.RET_ERROR;
+        if (!board.isOffice(players[player_id].getLocation()))
             return GameComRet.RET_ERROR;
 
         int cost = rank_cost_credits[rank_num];
@@ -131,8 +144,7 @@ class DeadwoodGame : IGameInstance {
         active_player %= players.Length;
     }
 
-    private void endDay()
-    {
-
+    private void endDay() {
+        // TODO: change location of all players, 
     }
 }

@@ -1,6 +1,15 @@
-/* idk tbh */
+/* Nicole Swierstra
+ * Weird extensible game engine thing 
+ *
+ * idk tbh 
+ */
 
 class Application {
+
+    /* in the future these could be dll files or something idk - dynamically loading the game would be kinda sick */
+    Type GAME_TYPE = typeof(DeadwoodGame);
+    Type UI_TYPE = typeof(DWConsoleUI);
+    
     public enum Commands {
         ID_QUIT = 0x0,
         ID_ADD_PLAYER,
@@ -16,7 +25,6 @@ class Application {
        This allows for repeat plays with the same player names */
     List<string> players = [];
 
-    Type game_type = typeof(DeadwoodGame);
 
     public static void Main(string[] args) {
         new Application().Run();
@@ -25,7 +33,7 @@ class Application {
     void Run() {
         ui_queue = new CommandQueue();
         application_queue = new CommandQueue();
-        ui_thread = new UIThread(typeof(DWConsoleUI), ui_queue, application_queue).Start();
+        ui_thread = new UIThread(UI_TYPE, ui_queue, application_queue).Start();
 
         application_queue.push((int)Commands.ID_START, []);
         bool running = true;
@@ -42,7 +50,7 @@ class Application {
                     players.Add(CommandQueue.unpackString(args));
                     break;
                 case Commands.ID_START:
-                    game_backend = (IGameInstance)Activator.CreateInstance(game_type);
+                    game_backend = (IGameInstance)Activator.CreateInstance(GAME_TYPE);
                     game_backend.Setup(players.ToArray(), ui_queue);
                     break;
                 default:

@@ -14,7 +14,9 @@ class Application {
 
     /* players is a string array divorced from the idea of a player. 
        This allows for repeat plays with the same player names */
-    List<string> players;
+    List<string> players = [];
+
+    Type game_type = typeof(DeadwoodGame);
 
     public static void Main(string[] args) {
         new Application().Run();
@@ -25,6 +27,7 @@ class Application {
         application_queue = new CommandQueue();
         ui_thread = new UIThread(typeof(DWConsoleUI), ui_queue, application_queue).Start();
 
+        application_queue.push((int)Commands.ID_START, []);
         bool running = true;
         while (running) {
             if (!application_queue.empty()){
@@ -39,7 +42,8 @@ class Application {
                     players.Add(CommandQueue.unpackString(args));
                     break;
                 case Commands.ID_START:
-                    game_backend = new DeadwoodGame();
+                    game_backend = (IGameInstance)Activator.CreateInstance(game_type);
+                    game_backend.Setup(players.ToArray(), ui_queue);
                     break;
                 default:
                     if (game_backend != null)

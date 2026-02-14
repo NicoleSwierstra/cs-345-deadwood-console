@@ -39,6 +39,7 @@ public class XMLParser {
 
         XmlNodeList children = node.ChildNodes;
         for (int i = 0; i < children.Count; i++) {
+            if (children[i] as XmlElement == null) continue;
             obj.children.Add(transcribe((XmlElement)children[i]));
         }
         obj.contents = node.InnerText;

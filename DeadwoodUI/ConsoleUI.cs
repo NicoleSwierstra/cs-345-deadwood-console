@@ -11,26 +11,26 @@ class DWConsoleUI : IGameUI
 
     public void End()
     {
-        throw new NotImplementedException();
+        //throw new NotImplementedException();
     }
 
     public void OnUpdate()
     {
-        throw new NotImplementedException();
+        //throw new NotImplementedException();
     }
 
     public void ProcessCommand(int cmd_id, int[] args)
     {
-        throw new NotImplementedException();
+        //throw new NotImplementedException();
     }
 
     public void Setup(CommandQueue applicationQueue)
     {
-        throw new NotImplementedException();
+        //throw new NotImplementedException();
     }
 
     public bool ShouldEnd()
     {
-        throw new NotImplementedException();
+        return false;
     }
 }

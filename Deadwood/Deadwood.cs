@@ -69,6 +69,13 @@ class DeadwoodGame : IGameInstance {
 
     public void Setup(string[] players, CommandQueue ui_queue) {
         this.ui_queue = ui_queue;
+        this.players = new Player[players.Length];
+        for(int i = 0; i < players.Length; i++) {
+            this.players[i] = new Player(players[i]);
+        }
+
+        this.board = Board.fromXML("res/gamedata/board.xml");
+
         throw new NotImplementedException();
     }
 

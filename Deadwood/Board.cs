@@ -67,6 +67,10 @@ class Board {
         return tiles[tile].neighbors;
     }
 
+    public int getCardId(int tile) {
+        
+    }
+    
     public bool isOffice(int space){
         return space == office_location;
     }

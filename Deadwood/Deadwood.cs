@@ -142,9 +142,19 @@ class DeadwoodGame : IGameInstance {
         players[active_player].endTurn();
         active_player++;
         active_player %= players.Length;
+        players[active_player].reset();
     }
 
     private void endDay() {
-        // TODO: change location of all players, 
+        foreach (Player p in players) {
+            p.reset();
+            p.move(board.getTrailer());
+            p.reset();
+        }
+
+        // TODO: deal cards
+        for (int i = 0; i < 10; i++) {
+            
+        }
     }
 }

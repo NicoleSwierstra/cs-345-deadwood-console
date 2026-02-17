@@ -11,12 +11,10 @@ class DWConsoleUI : IGameUI
 
     public void End()
     {
-        //throw new NotImplementedException();
+        Console.WriteLine("Thank you for playing!");
     }
 
-    public void OnUpdate()
-    {
-        //throw new NotImplementedException();
+    public void OnUpdate() {
     }
 
     public void ProcessCommand(int cmd_id, int[] args)

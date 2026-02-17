@@ -67,4 +67,8 @@ class Player
     public int getRole() {
         return active_role;
     }
+
+    public void reset() {
+        has_moved = false;
+    }
 }

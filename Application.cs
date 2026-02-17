@@ -27,7 +27,8 @@ class Application {
 
 
     public static void Main(string[] args) {
-        new Application().Run();
+        UISelector.Test(args);
+        //new Application().Run();
     }
 
     void Run() {

@@ -8,9 +8,11 @@
 class DWConsoleUI : IGameUI
 {
     CommandQueue applicationQueue;
+    ConsoleBoard cb;
 
-    public void End()
-    {
+    bool should_end;
+
+    public void End() {
         Console.WriteLine("Thank you for playing!");
     }
 
@@ -22,13 +24,12 @@ class DWConsoleUI : IGameUI
         //throw new NotImplementedException();
     }
 
-    public void Setup(CommandQueue applicationQueue)
-    {
-        //throw new NotImplementedException();
+    public void Setup(CommandQueue applicationQueue) {
+        cb = ConsoleBoard.fromXML("res/gamedata/board.xml");
     }
 
     public bool ShouldEnd()
     {
-        return false;
+        return should_end;
     }
 }

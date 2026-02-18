@@ -54,7 +54,7 @@ class ConsoleBoard {
         return new ConsoleBoard(names, n_extras);
     }
     
-    string getTileName(int tile){
+    public string getTileName(int tile){
         return names[tile];
     }
 }

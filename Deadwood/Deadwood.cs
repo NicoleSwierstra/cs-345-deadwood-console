@@ -2,9 +2,10 @@
  * Deadwood Game
  */
 
+
 class DeadwoodGame : IGameInstance {
     public enum Actions {
-        ID_MOVE = 0x10, ID_TAKE, ID_UPGRADE, ID_REHEARSE, ID_ACT, ID_FORCE_END
+        ID_MOVE = 0x10, ID_TAKE, ID_UPGRADE, ID_REHEARSE, ID_ACT, ID_TILEINFO, ID_FORCE_END
     };
 
     private CommandQueue ui_queue;
@@ -52,19 +53,32 @@ class DeadwoodGame : IGameInstance {
         case Actions.ID_MOVE:
             return processMove(args);
         case Actions.ID_TAKE:
-            return processMove(args);
+            return processTake(args);
         case Actions.ID_UPGRADE:
-            return processMove(args);
+            return processUpgrade(args);
         case Actions.ID_ACT:
-            return processMove(args);
+            return processAct(args);
         case Actions.ID_REHEARSE:
-            return processMove(args);
+            return processRehearse(args);
+        case Actions.ID_TILEINFO:
+            return sendTileInfo(args);        
         case Actions.ID_FORCE_END:
             End();
             return GameComRet.RET_ENDED;
         default:
-            return pass(cmd_id, args);
+            return GameComRet.RET_ERROR; /* pass(cmd_id, args); */
         }
+    }
+
+    private GameComRet sendTileInfo(int[] args) {
+        List<int> data = [players[args[0]].getLocation()];
+        foreach (int i in board.getAdjacent(data[0])) {
+            data.Add(i);
+        }
+
+        ui_queue.push((int)DWConsoleUI.Commands.REVEAL_NEIGHBORS, data.ToArray());
+
+        return GameComRet.RET_SUCCESS;
     }
 
     public void End() {
@@ -142,6 +156,7 @@ class DeadwoodGame : IGameInstance {
         players[active_player].endTurn();
         active_player++;
         active_player %= players.Length;
+        ui_queue.push((int)DWConsoleUI.Commands.PLAYER_TURN, [active_player]);
     }
 
     private void endDay() {
@@ -155,5 +170,10 @@ class DeadwoodGame : IGameInstance {
         for (int i = 0; i < 10; i++) {
             
         }
+
+        active_player = 0;
+        ui_queue.push((int)DWConsoleUI.Commands.END_DAY, [current_day]);
+        
+        current_day++;
     }
 }

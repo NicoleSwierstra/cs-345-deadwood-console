@@ -13,6 +13,7 @@ class Application {
     public enum Commands {
         ID_QUIT = 0x0,
         ID_ADD_PLAYER,
+        ID_CLEAR_PLAYERS,
         ID_START,
     }
     
@@ -36,7 +37,6 @@ class Application {
         application_queue = new CommandQueue();
         ui_thread = new UIThread(UI_TYPE, ui_queue, application_queue).Start();
 
-        application_queue.push((int)Commands.ID_START, []);
         bool running = true;
         while (running) {
             if (!application_queue.empty()){
@@ -48,10 +48,11 @@ class Application {
                     running = false; 
                     break;
                 case Commands.ID_ADD_PLAYER:
-                    foreach (int i in args) { Console.Write(i.ToString("X") + ", "); }                
                     string p_name = CommandQueue.unpackString(args);
-                    Console.WriteLine(p_name);
                     players.Add(p_name);
+                    break;
+                case Commands.ID_CLEAR_PLAYERS:
+                    players.Clear();
                     break;
                 case Commands.ID_START:
                     game_backend = (IGameInstance)Activator.CreateInstance(GAME_TYPE);

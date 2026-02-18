@@ -24,27 +24,27 @@ class UISelector {
         return s;
     }
 
-    public void update(ConsoleKey key) {
-        int n = key - ConsoleKey.D0;
+    public void update(ConsoleKeyInfo key) {
+        int n = key.Key - ConsoleKey.D0;
         if (n >= 0 && n < options.Count){
             selected = true;
             selection = n;
             return;
         }
 
-        if (key == ConsoleKey.DownArrow) {
+        if (key.Key == ConsoleKey.DownArrow) {
             selection++;
             if (selection >= options.Count) selection = 0;
             render();            
         }
 
-        if (key == ConsoleKey.UpArrow) {
+        if (key.Key == ConsoleKey.UpArrow) {
             selection--;
             if (selection < 0) selection = options.Count - 1;
             render();
         }
 
-        if (key == ConsoleKey.Enter && selection >= 0){
+        if (key.Key == ConsoleKey.Enter && selection >= 0){
             selected = true;
         }
     }
@@ -61,7 +61,7 @@ class UISelector {
         }
     }
 
-    public bool has_selected() {
+    public bool hasSelected() {
         return selected;
     }
 
@@ -73,9 +73,9 @@ class UISelector {
     {
         UISelector sel = UISelector.fromList(["hello", "world", "test", "123"], "select an option:"); 
 
-        while(!sel.has_selected()){
+        while(!sel.hasSelected()){
             if (Console.KeyAvailable){
-                sel.update(Console.ReadKey().Key);
+                sel.update(Console.ReadKey(true));
             }
         }
 

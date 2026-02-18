@@ -47,10 +47,7 @@ class CommandQueue {
      * null terminated and fitted to 4 bytes */
     public static int[] packString(string s) {
         int[] r = new int[(s.Length / 2) + 1]; /* strings are utf16 in c# */
-        int i;
-        for (i = 0; i < s.Length; i++) {
-            if (i % 2 == 0) /* i think they're initialized to zero but i guess i don't know lol */
-                r[i] = 0;
+        for (int i = 0; i < s.Length; i++) {
             char c = s[i];
             r[i / 2] |= c << 16 * (i % 2); 
         }
@@ -63,7 +60,7 @@ class CommandQueue {
     public static string unpackString(int[] arr) {
         string s = "";
         for (int i = 0; i < arr.Length * 2; i++) {
-            char c = (char)(0xFFFF & (arr[i] << 16 * (i % 2)));
+            char c = (char)(0xFFFF & (arr[i / 2] >> 16 * (i % 2)));
             if (c == '\0') break;
             s += c;
         }

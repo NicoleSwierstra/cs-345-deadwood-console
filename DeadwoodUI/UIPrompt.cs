@@ -1,3 +1,8 @@
+/* Nicole Swierstra
+ *
+ * Not sure I'm cooking anything tbh 
+ */
+
 class UIPrompt {
     string message;
 
@@ -16,20 +21,20 @@ class UIPrompt {
         return p;
     }
 
-    public void update(ConsoleKey key, char key_char) {
+    public void update(ConsoleKeyInfo key_press) {
         if (has_prompted) return;
         
-        if (key == ConsoleKey.Enter) {
+        if (key_press.Key == ConsoleKey.Enter) {
             has_prompted = true;
             Console.WriteLine();
-        } else if (key == ConsoleKey.Spacebar) {
+        } else if (key_press.Key == ConsoleKey.Spacebar) {
             prompt += " "; /* space isn't considered a key character */
             render();
-        } else if (key == ConsoleKey.Backspace) {
+        } else if (key_press.Key == ConsoleKey.Backspace) {
             prompt = prompt.Substring(0, Math.Max(prompt.Length - 1, 0));
             render();
-        } else if (key_char != 0) {
-            prompt += key_char;
+        } else if (key_press.KeyChar != 0) {
+            prompt += key_press.KeyChar;
             render();
         } 
     }
@@ -48,13 +53,18 @@ class UIPrompt {
         return prompt;
     }
 
+    public void Clear() {
+        prompt = "";
+        has_prompted = false;
+    }
+
     public static void Test(string[] args) {
         UIPrompt p = UIPrompt.fromMsg("enter command:"); 
 
         while(!p.hasPrompt()){
             if (Console.KeyAvailable){
-                ConsoleKeyInfo ki = Console.ReadKey();
-                p.update(ki.Key, ki.KeyChar);
+                ConsoleKeyInfo ki = Console.ReadKey(true);
+                p.update(ki);
             }
         }
 

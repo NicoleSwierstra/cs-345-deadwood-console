@@ -27,8 +27,8 @@ class Application {
 
 
     public static void Main(string[] args) {
-        UIPrompt.Test(args);
-        //new Application().Run();
+        //UIPrompt.Test(args);
+        new Application().Run();
     }
 
     void Run() {
@@ -47,8 +47,11 @@ class Application {
                     ui_thread.Join();
                     running = false; 
                     break;
-                case Commands.ID_ADD_PLAYER: 
-                    players.Add(CommandQueue.unpackString(args));
+                case Commands.ID_ADD_PLAYER:
+                    foreach (int i in args) { Console.Write(i.ToString("X") + ", "); }                
+                    string p_name = CommandQueue.unpackString(args);
+                    Console.WriteLine(p_name);
+                    players.Add(p_name);
                     break;
                 case Commands.ID_START:
                     game_backend = (IGameInstance)Activator.CreateInstance(GAME_TYPE);

@@ -7,7 +7,6 @@ class UISelector {
     bool selected;
     int selection;
 
-    /* c# is the most complicated language on earth fr what the hell is this */
     string message;
     List<string> options;
 

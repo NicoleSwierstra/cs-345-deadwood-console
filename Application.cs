@@ -27,7 +27,7 @@ class Application {
 
 
     public static void Main(string[] args) {
-        UISelector.Test(args);
+        UIPrompt.Test(args);
         //new Application().Run();
     }
 

@@ -36,8 +36,8 @@ class UIThread {
 
     private void Run() {
         while(!ui.ShouldEnd() && keep_running) {
-            /* one at a time is probably fine tbh */
-            if (!uiQueue.empty()) {
+            /* one per update is probably fine tbh */
+            if (!(uiQueue.empty() && ui.IsLocked())) {
                 int id = uiQueue.pop(out int[] args);
                 ui.ProcessCommand(id, args);
             }

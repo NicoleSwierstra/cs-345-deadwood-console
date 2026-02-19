@@ -222,4 +222,10 @@ class DWConsoleUI : IGameUI {
     {
         return should_end;
     }
+
+    /* Console ui is never locked - no animations */
+    public bool IsLocked()
+    {
+        return false;
+    }
 }

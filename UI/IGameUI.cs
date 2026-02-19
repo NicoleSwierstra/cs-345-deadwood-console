@@ -16,6 +16,9 @@ interface IGameUI
     /* needs to process commands */
     public void ProcessCommand(int cmd_id, int[] args);
 
+    /* can the ui currently process commands */
+    public Boolean IsLocked();
+
     /* like window.should_close in glfw or something */
     public bool ShouldEnd();
 

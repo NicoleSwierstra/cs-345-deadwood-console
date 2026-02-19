@@ -1,3 +1,6 @@
+
+namespace Deadwood;
+
 class Role
 {
     public readonly string name;

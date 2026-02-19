@@ -1,3 +1,6 @@
+
+
+namespace Deadwood;
 class ConsoleBoard {
     private Dictionary<int, string> names;
     private List<Role>[] tile_extras;

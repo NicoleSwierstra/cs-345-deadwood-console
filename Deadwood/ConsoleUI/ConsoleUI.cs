@@ -5,14 +5,17 @@
  *  All of the UI is in just a small handful of classes. Uh this might have been a bad idea tbh, I will fix this.
  */
 
-/* TODO: change to this */
+namespace Deadwood;
+
 struct PlayerNode {
     public string Name;
     public int color;
+    public bool remote;
     
-    public PlayerNode(string name, int col) {
+    public PlayerNode(string name, int col, bool rem) {
         Name = name; 
         color = col;
+        remote = rem;
     }
 
     public override string ToString()
@@ -40,14 +43,6 @@ class DWConsoleUI : IGameUI {
         END_DAY,
     }
 
-    public enum Commands {
-        INVALID_INPUT = 0x20,
-        PLAYER_TURN,
-        REVEAL_NEIGHBORS,
-        END_DAY,
-        END_GAME,
-    }
-
     CommandQueue applicationQueue;
     ConsoleBoard cb;
     
@@ -55,7 +50,7 @@ class DWConsoleUI : IGameUI {
     PromptType promptType;
     UISelector current_selector;
     UIPrompt current_prompt;
-    List<PlayerNode> current_players;
+    List<PlayerNode> all_players;
     int active_player;
 
     bool should_end;
@@ -71,7 +66,7 @@ class DWConsoleUI : IGameUI {
         promptType = PromptType.MAIN_MENU;
         string message = "Welcome to the console version of Deadwood!\n\n\t[add] Player\n\t[remove] Player\n\t[start] Game\n\t[quit] Game.\n\nPlayers:\n";
         int i = 0;
-        foreach (PlayerNode p in current_players) {
+        foreach (PlayerNode p in all_players) {
             message += $"\x1b[38;5;{PLAYER_COLORS[p.color]}m[{i}]\x1b[0m: {p.Name}\n";
             i++;
         }
@@ -84,13 +79,13 @@ class DWConsoleUI : IGameUI {
         selectorType = SelectorType.NONE_TYPE;
 
         promptType = PromptType.GAME_COMMAND;
-        PlayerNode p = current_players[active_player];
+        PlayerNode p = all_players[active_player];
         string message = preamble + $"{p}'s turn.\n\n\t[move] spaces\n\t[take] role\n\t[upgrade] player\n\t[rehearse] role\n\t[act] in role\n";
         current_prompt = UIPrompt.fromMsg(message);
     }
 
     void showPlayerMove(int[] args) {
-        string message = $"{current_players[active_player]} is on tile: {cb.getTileName(args[0])}";
+        string message = $"{all_players[active_player]} is on tile: {cb.getTileName(args[0])}";
         List<string> tiles = [];
         for(int i = 1; i < args.Length; i++) {
             tiles.Add($"{cb.getTileName(args[i])}");
@@ -100,21 +95,23 @@ class DWConsoleUI : IGameUI {
 
     void appendPlayer(string name) {
         int first_availible_color;
+        /* TODO: let players choose their colors */
         for (first_availible_color = 0; first_availible_color < 8; first_availible_color++) {
-            if (current_players.FindIndex(x => x.color == first_availible_color) == -1) 
-                break;
+            if (all_players.Any(x => x.color == first_availible_color)) 
+                continue;
+            else break;
         }
 
-        current_players.Add(new PlayerNode(name, first_availible_color));
+        all_players.Add(new PlayerNode(name, first_availible_color, false));
     }
 
-    /* I 100% could have done this better - scuffed ass */
+    /* I 100% could have done this better - scuffed ass implementation */
     void processPrompt(string prompt) {
         if (promptType == PromptType.MAIN_MENU) {
             switch (prompt.ToLower()) {
             case "a":
             case "add":
-                if (current_players.Count == 8){
+                if (all_players.Count == 8){
                     Console.WriteLine("Maximum # of players reached.");
                     current_prompt.Clear();
                     return; 
@@ -126,13 +123,13 @@ class DWConsoleUI : IGameUI {
             case "remove":
                 promptType = PromptType.NONE_TYPE;
                 selectorType = SelectorType.DELETE_PLAYER;
-                current_selector = UISelector.fromList(current_players.Select(x => x.Name).ToList(), "Choose a player to remove:");
+                current_selector = UISelector.fromList(all_players.Select(x => x.Name).ToList(), "Choose a player to remove:");
                 current_prompt = null;
                 break;
             case "s":
             case "start":
                 applicationQueue.push((int)Application.Commands.ID_CLEAR_PLAYERS, []);
-                foreach (PlayerNode p in current_players) {
+                foreach (PlayerNode p in all_players) {
                     applicationQueue.push((int)Application.Commands.ID_ADD_PLAYER, CommandQueue.packString(p.Name));
                 }
                 applicationQueue.push((int)Application.Commands.ID_START, []);
@@ -154,7 +151,7 @@ class DWConsoleUI : IGameUI {
             switch (prompt.ToLower()) {
                 case "move":
                     selectorType = SelectorType.MOVE_TYPE;
-                    applicationQueue.push((int)DeadwoodGame.Actions.ID_TILEINFO, [active_player]);
+                    applicationQueue.push((int)GameActions.ID_TILEINFO, [active_player]);
                     /* wait until it gets it back in commands */
                     break;
                 default:
@@ -167,7 +164,7 @@ class DWConsoleUI : IGameUI {
 
     void processSelection(int selection) {
         if (selectorType == SelectorType.DELETE_PLAYER) {
-            current_players.RemoveAt(selection);
+            all_players.RemoveAt(selection);
             showMainMenu();
         } else if (selectorType == SelectorType.MOVE_TYPE) {
             throw new NotImplementedException();
@@ -196,18 +193,18 @@ class DWConsoleUI : IGameUI {
     }
 
     public void ProcessCommand(int cmd_id, int[] args) {
-        switch((Commands)cmd_id) {
-            case Commands.INVALID_INPUT:
+        switch((ClientCommands)cmd_id) {
+            case ClientCommands.INVALID_INPUT:
                 Console.WriteLine("InvalidInput. Idk what exactly but good luck.");
                 return;
-            case Commands.PLAYER_TURN:
+            case ClientCommands.PLAYER_TURN:
                 active_player = args[0];
                 showPlayerChoice("");
                 break;
-            case Commands.REVEAL_NEIGHBORS:
+            case ClientCommands.REVEAL_NEIGHBORS:
                 showPlayerMove(args);
                 break; 
-            case Commands.END_DAY:
+            case ClientCommands.END_DAY:
                 active_player = 0;
                 showPlayerChoice(args[0] == 0 ? "The game has begun! Good Luck!\n\n" : "End of day " + args[0] + "\n\n");
                 break;
@@ -216,7 +213,7 @@ class DWConsoleUI : IGameUI {
 
     public void Setup(CommandQueue applicationQueue) {
         cb = ConsoleBoard.fromXML("res/gamedata/board.xml");
-        current_players = [];
+        all_players = [];
         this.applicationQueue = applicationQueue;
         showMainMenu();
     }

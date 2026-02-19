@@ -1,3 +1,5 @@
+
+namespace Deadwood;
 class Tile {
     /* sort of duplicate with the board's tile. probably unneccessary */
     public readonly int location;

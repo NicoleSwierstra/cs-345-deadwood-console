@@ -1,3 +1,5 @@
+
+namespace Deadwood;
 class SceneCard
 {
     public string name;

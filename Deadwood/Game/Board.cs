@@ -1,3 +1,4 @@
+namespace Deadwood;
 class Board {
     private Tile[] tiles; //12 tiles
     private int trailer_location;

@@ -7,12 +7,13 @@
 class Application {
 
     /* in the future these could be dll files or something idk - dynamically loading the game would be kinda sick */
-    Type GAME_TYPE = typeof(DeadwoodGame);
-    Type UI_TYPE = typeof(DWConsoleUI);
+    Type GAME_TYPE = typeof(Deadwood.DeadwoodGame);
+    Type UI_TYPE = typeof(Deadwood.DWConsoleUI);
     
     public enum Commands {
         ID_QUIT = 0x0,
         ID_ADD_PLAYER,
+        ID_REMOVE_PLAYER,
         ID_CLEAR_PLAYERS,
         ID_START,
     }

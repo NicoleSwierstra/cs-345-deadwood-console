@@ -1,3 +1,6 @@
+
+namespace Deadwood;
+
 class Deck {
     /* this might be dangerous idk */
     private static Dictionary<SceneCard, int> scene_ids;

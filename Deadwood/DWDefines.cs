@@ -15,7 +15,7 @@ public enum GameActions {
      *    0: player_id
      *    1: location to move
      */ 
-    ID_MOVE = 0x10, 
+    MOVE = 0x10, 
     
     /* 
      * Command to signal that a player wants to take a role. 
@@ -24,7 +24,7 @@ public enum GameActions {
      *    0: player_id
      *    1: role_id - the list of roles in order of what they are on the json file, extras first then the current scene card
      */ 
-    ID_TAKE,
+    TAKE,
     
     /*
      * Command that signals a player wants to upgrade
@@ -34,7 +34,7 @@ public enum GameActions {
      *    1: upgrade type
      *    2: new level #
      */ 
-    ID_UPGRADE,
+    UPGRADE,
     
     /*
      * Command that signals that a player wants to rehearse
@@ -42,7 +42,7 @@ public enum GameActions {
      * Args:
      *    0: player_id
      */ 
-    ID_REHEARSE, 
+    REHEARSE, 
     
     /*
      * Command that signals that a player wants to rehearse
@@ -51,7 +51,7 @@ public enum GameActions {
      *    0: player_id
      *    1: roll value (this is passed in to allow like dice based physics simulations or whatever)
      */
-    ID_ACT,
+    ACT,
 
     /*
      * Util command that sends information about the current tile a player is on
@@ -59,24 +59,26 @@ public enum GameActions {
      * Args: 
      *    0: player_id
      */
-    ID_TILEINFO,
-    
+    TILEINFO,
+
+    /*
+     * Util command to get the card info of the tile the player is on. 
+     * 
+     * Args:
+     *    0: player_id
+     */
+    CARD_INFO,
+
     /*
      * Util command that forces the game to end.
      *
      * Args: None
      */
-    ID_FORCE_END
+    FORCE_END
 };
 
 public enum ClientCommands {
-    /*
-     * Sent when the last command sent to the game is invalid. It is up to the UI to interpret what that means.
-     * Args:
-     *    Maybe there could be a type here in the future but as of right now it has no arguments.
-     */
-    INVALID_INPUT = 0x20,
-    
+   
     /*
      * Adds a remote player to the UI. This is sent between all nodes when a new player is added, and all current players are sent with this command to a new node.
      * 
@@ -84,7 +86,7 @@ public enum ClientCommands {
      *    0: color
      * 1..n: packed string of player's name.
      */
-    ADD_REMOTE_PLAYER,
+    ADD_REMOTE_PLAYER = 0x30,
     
     /*
      * Removes a remote player
@@ -110,6 +112,35 @@ public enum ClientCommands {
      * 1..n: neighbor tile_id
      */
     REVEAL_NEIGHBORS,
+
+    /*
+     * Reveals a card from a tile.
+     * 
+     * Args:
+     *    0: tile_id
+     *    1: card_id
+     */
+    REVEAL_CARD,
+
+    /*
+     * Change player location
+     *
+     * Args:
+     *    0: player_id
+     *    1: new location
+     */
+    UPDATE_LOCATION,
+
+    /*
+     * Change player currency
+     *
+     * Args:
+     *    0: player_id
+     *    1: player's dollars
+     *    2: player's credits
+     *    3: player's rehersal tokens
+     */
+    UPDATE_CURRENCY,
     
     /*
      * Ends the current day.

@@ -5,6 +5,23 @@
  *  Game when it's either an AWT UI or (hopefully) an interface to opengl drivers. 
  */
 
+public enum UI_Commands {
+    /*
+     * Sent when the last command sent to the game is invalid. It is up to the UI to interpret what that means.
+     * Args:
+     *    Maybe there could be a type here in the future but as of right now it has no arguments.
+     */
+    CMD_FAILURE = 0x20,
+    
+    /*
+     * Sent when the last command sent to the game was executed successfully. It is up to the UI to interpret what that means.
+     * 
+     * Args:
+     *    Maybe there could be a type here in the future but as of right now it has no arguments.
+     */
+    CMD_SUCCESS,
+}
+
 interface IGameUI
 {
     /* needs reference back to the application so it can tell it what to do */

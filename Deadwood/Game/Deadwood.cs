@@ -47,19 +47,19 @@ class DeadwoodGame : IGameInstance {
         /* disallowing any funny buisness with some basic sanitization */
        
         switch ((GameActions)cmd_id) {
-        case GameActions.ID_MOVE:
+        case GameActions.MOVE:
             return processMove(args);
-        case GameActions.ID_TAKE:
+        case GameActions.TAKE:
             return processTake(args);
-        case GameActions.ID_UPGRADE:
+        case GameActions.UPGRADE:
             return processUpgrade(args);
-        case GameActions.ID_ACT:
+        case GameActions.ACT:
             return processAct(args);
-        case GameActions.ID_REHEARSE:
+        case GameActions.REHEARSE:
             return processRehearse(args);
-        case GameActions.ID_TILEINFO:
+        case GameActions.TILEINFO:
             return sendTileInfo(args);        
-        case GameActions.ID_FORCE_END:
+        case GameActions.FORCE_END:
             End();
             return GameComRet.RET_ENDED;
         default:

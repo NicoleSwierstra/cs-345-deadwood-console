@@ -9,16 +9,34 @@ class UISelector {
 
     string message;
     List<string> options;
+    List<int> vals;
 
     private UISelector(List<string> options, string message, int sel) {
         selection = sel;
         selected = false;
         this.options = options;
         this.message = message;
+        this.vals = [];
+        for (int i = 0; i < options.Count; i++) { vals.Add(i); }
+    }
+
+    private UISelector(List<string> options, List<int> vals, string message, int sel) {
+        selection = sel;
+        selected = false;
+        this.options = options;
+        this.message = message;
+        this.vals = vals;
     }
 
     public static UISelector fromList(List<string> options, string message) {
         UISelector s = new UISelector(options, message, -1);
+        s.render();
+
+        return s;
+    }
+
+    public static UISelector fromList(List<string> options, List<int> vals, string message) {
+        UISelector s = new UISelector(options, vals, message, -1);
         s.render();
 
         return s;
@@ -66,7 +84,7 @@ class UISelector {
     }
 
     public int getSelection() {
-        return selection;
+        return vals[selection];
     }
 
     public static void Test(string[] args)

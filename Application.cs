@@ -11,11 +11,11 @@ class Application {
     Type UI_TYPE = typeof(Deadwood.DWConsoleUI);
     
     public enum Commands {
-        ID_QUIT = 0x0,
-        ID_ADD_PLAYER,
-        ID_REMOVE_PLAYER,
-        ID_CLEAR_PLAYERS,
-        ID_START,
+        QUIT = 0x0,
+        ADD_PLAYER,
+        REMOVE_PLAYER,
+        CLEAR_PLAYERS,
+        START,
     }
     
     IGameInstance game_backend;
@@ -43,25 +43,33 @@ class Application {
             if (!application_queue.empty()){
                 int id = application_queue.pop(out int[] args);
                 switch ((Commands)id) {
-                case Commands.ID_QUIT:
+                case Commands.QUIT:
                     ui_thread.Stop();
                     ui_thread.Join();
                     running = false; 
                     break;
-                case Commands.ID_ADD_PLAYER:
+                case Commands.ADD_PLAYER:
                     string p_name = CommandQueue.unpackString(args);
                     players.Add(p_name);
                     break;
-                case Commands.ID_CLEAR_PLAYERS:
+                case Commands.CLEAR_PLAYERS:
                     players.Clear();
                     break;
-                case Commands.ID_START:
+                case Commands.START:
                     game_backend = (IGameInstance)Activator.CreateInstance(GAME_TYPE);
                     game_backend.Setup(players.ToArray(), ui_queue);
                     break;
                 default:
-                    if (game_backend != null)
-                        game_backend.ProcessCommand((int)id, args);
+                    if (game_backend != null) {
+                        GameComRet r = game_backend.ProcessCommand((int)id, args);
+                        if (r == GameComRet.RET_ERROR)
+                            ui_queue.push((int)UI_Commands.CMD_FAILURE, []);
+                        else if (r == GameComRet.RET_SUCCESS)
+                            ui_queue.push((int)UI_Commands.CMD_SUCCESS, []);
+                        else if (r == GameComRet.RET_ENDED) {
+                            //ui_queue.push((int)UI_Commands.) IDK TBH
+                        }
+                    }
                     break;
                 }
             }

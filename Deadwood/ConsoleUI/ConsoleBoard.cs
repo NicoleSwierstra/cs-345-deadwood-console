@@ -60,4 +60,11 @@ class ConsoleBoard {
     public string getTileName(int tile){
         return names[tile];
     }
+
+    public int getTileIdx(string tile_name) {
+        foreach (int i in names.Keys) {
+            if (tile_name.Contains(names[i])) return i;
+        }
+        return -1;
+    }
 }

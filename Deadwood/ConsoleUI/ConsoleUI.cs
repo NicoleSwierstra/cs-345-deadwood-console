@@ -86,11 +86,13 @@ class DWConsoleUI : IGameUI {
 
     void showPlayerMove(int[] args) {
         string message = $"{all_players[active_player]} is on tile: {cb.getTileName(args[0])}";
-        List<string> tiles = [];
+        List<string> tiles = ["Cancel"];
+        List<int> positions = [-1];
         for(int i = 1; i < args.Length; i++) {
             tiles.Add($"{cb.getTileName(args[i])}");
+            positions.Add(args[i]);
         }
-        current_selector = UISelector.fromList(tiles, message);
+        current_selector = UISelector.fromList(tiles, positions, message);
     }
 
     void appendPlayer(string name) {
@@ -128,16 +130,21 @@ class DWConsoleUI : IGameUI {
                 break;
             case "s":
             case "start":
-                applicationQueue.push((int)Application.Commands.ID_CLEAR_PLAYERS, []);
-                foreach (PlayerNode p in all_players) {
-                    applicationQueue.push((int)Application.Commands.ID_ADD_PLAYER, CommandQueue.packString(p.Name));
+                if (all_players.Count < 2) {
+                    Console.WriteLine("\rNeed 2 or more players to start.");
+                    current_prompt.Clear();
+                    return;
                 }
-                applicationQueue.push((int)Application.Commands.ID_START, []);
+                applicationQueue.push((int)Application.Commands.CLEAR_PLAYERS, []);
+                foreach (PlayerNode p in all_players) {
+                    applicationQueue.push((int)Application.Commands.ADD_PLAYER, CommandQueue.packString(p.Name));
+                }
+                applicationQueue.push((int)Application.Commands.START, []);
                 break;
             case "q":
             case "quit":
             case "exit":
-                applicationQueue.push((int)Application.Commands.ID_QUIT, []);
+                applicationQueue.push((int)Application.Commands.QUIT, []);
                 break;
             default:
                 Console.WriteLine("\rInvalid Arg!");
@@ -151,7 +158,7 @@ class DWConsoleUI : IGameUI {
             switch (prompt.ToLower()) {
                 case "move":
                     selectorType = SelectorType.MOVE_TYPE;
-                    applicationQueue.push((int)GameActions.ID_TILEINFO, [active_player]);
+                    applicationQueue.push((int)GameActions.TILEINFO, [active_player]);
                     /* wait until it gets it back in commands */
                     break;
                 default:
@@ -167,7 +174,13 @@ class DWConsoleUI : IGameUI {
             all_players.RemoveAt(selection);
             showMainMenu();
         } else if (selectorType == SelectorType.MOVE_TYPE) {
-            throw new NotImplementedException();
+            Console.Write(selection);
+            Thread.Sleep(1000);
+            if (selection == -1) {
+                showPlayerChoice("Move cancelled.\n");
+                return;
+            }
+            applicationQueue.push((int)GameActions.MOVE, [active_player, selection]);
         } else if (selectorType == SelectorType.TAKE_TYPE) {
             throw new NotImplementedException();
         }
@@ -194,9 +207,17 @@ class DWConsoleUI : IGameUI {
 
     public void ProcessCommand(int cmd_id, int[] args) {
         switch((ClientCommands)cmd_id) {
-            case ClientCommands.INVALID_INPUT:
+            case (ClientCommands)UI_Commands.CMD_FAILURE:
                 Console.WriteLine("InvalidInput. Idk what exactly but good luck.");
                 return;
+            case (ClientCommands)UI_Commands.CMD_SUCCESS:
+                Console.WriteLine("Command executed successfully.");
+                return;
+            case ClientCommands.ADD_REMOTE_PLAYER:
+            case ClientCommands.RM_REMOTE_PLAYER:
+            case ClientCommands.UPDATE_CURRENCY:
+            case ClientCommands.UPDATE_LOCATION:
+                throw new NotImplementedException();
             case ClientCommands.PLAYER_TURN:
                 active_player = args[0];
                 showPlayerChoice("");
@@ -204,10 +225,17 @@ class DWConsoleUI : IGameUI {
             case ClientCommands.REVEAL_NEIGHBORS:
                 showPlayerMove(args);
                 break; 
+            case ClientCommands.REVEAL_CARD:
+                throw new NotImplementedException();
             case ClientCommands.END_DAY:
                 active_player = 0;
                 showPlayerChoice(args[0] == 0 ? "The game has begun! Good Luck!\n\n" : "End of day " + args[0] + "\n\n");
                 break;
+            case ClientCommands.END_GAME:
+                should_end = true;
+                break;
+            default:
+                throw new NotImplementedException();
         }
     }
 

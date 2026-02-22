@@ -4,10 +4,15 @@ namespace Deadwood;
 class ConsoleBoard {
     private Dictionary<int, string> names;
     private List<Role>[] tile_extras;
+    private int[] tile_cards;
 
     private ConsoleBoard(Dictionary<int, string> d, List<Role>[] e) {
         names = d;
         tile_extras = e;
+        tile_cards = new int[names.Count];
+        for (int i = 0; i < names.Count; i++) {
+            tile_cards[i] = -1;
+        } 
     }
 
     public static ConsoleBoard fromXML(string filepath) {
@@ -56,7 +61,15 @@ class ConsoleBoard {
 
         return new ConsoleBoard(names, n_extras);
     }
-    
+
+    public void setTileCard(int tile, int card) {
+        tile_cards[tile] = card;
+    }
+
+    public int getTileCard(int tile) {
+        return tile_cards[tile];
+    }
+
     public string getTileName(int tile){
         return names[tile];
     }
@@ -66,5 +79,9 @@ class ConsoleBoard {
             if (tile_name.Contains(names[i])) return i;
         }
         return -1;
+    }
+
+    public List<Role> GetRoles(int tile) {
+        return tile_extras[tile];
     }
 }

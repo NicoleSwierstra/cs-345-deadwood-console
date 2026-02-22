@@ -1,26 +1,26 @@
-
 namespace Deadwood;
 
-class Deck {
-    private SceneCard[] cards;
+class ConsoleDeck {
+    private List<Role>[] cards;
+    private string[] scene_names;
     static Random rand = new Random((int)DateTime.Now.Ticks);
     private int counter = 0;
     
-    private Deck(SceneCard[] c) {
+    private ConsoleDeck(List<Role>[] c, string[] n) {
         cards = c;
+        scene_names = n;
     }
 
-    public static Deck fromXML(string filepath) {
-
+    public static ConsoleDeck fromXML(string filepath) {
         XMLParser.XMLObj root = XMLParser.ReadFile(filepath);
         List<XMLParser.XMLObj> children = root.children;
-        SceneCard[] cardArray = new SceneCard[children.Count];
+        List<Role>[] cardArray = new List<Role>[children.Count];
+        string[] nameArray = new string[children.Count];
 
         // get card elements and set fields
         for (int i = 0 ; i < children.Count; i++) {
             string name = children[i].attribs["name"];
             string desc = children[i].children.Find(x => x.tag == "scene").contents;
-            int budget = int.Parse(children[i].attribs["budget"]);
 
             // Get the card's parts
             List<XMLParser.XMLObj> parts = children[i].children.FindAll(x => x.tag == "part");
@@ -35,21 +35,18 @@ class Deck {
                 roles.Add(r);
             }
             // build SceneCard
-            SceneCard card = new SceneCard(name, desc, budget, roles.ToArray());
-            cardArray[i] = card;
-            
+            cardArray[i] = roles;
+            nameArray[i] = name;
         } 
 
-        return new Deck(cardArray);
+        return new ConsoleDeck(cardArray, nameArray);
     }
 
-    /* silly little shuffling function */
-    public Deck shuffled() {
-        rand.Shuffle(cards);
-        return this;
+    public string getName(int card) {
+        return scene_names[card]; 
     }
 
-    public SceneCard dealTop() {
-        return cards[counter++];
+    public List<Role> getRoles(int card) {
+        return cards[card];
     }
 }

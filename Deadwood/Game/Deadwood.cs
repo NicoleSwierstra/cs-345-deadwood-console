@@ -10,12 +10,12 @@ class DeadwoodGame : IGameInstance {
     private Player[] players; //2-8 players
     private Board board;
     private Deck deck;
-
     private int current_day;
 
     private int game_length;
 
-    static Random rand = new Random();
+    static Random rand = new Random(unchecked((int)DateTime.Now.Ticks * 2));
+    private bool ended = false;
 
     /* ===== game consts ===== */
     /* TODO: these are stored in the xml for the board for some reason. Parse those Ig */
@@ -48,8 +48,8 @@ class DeadwoodGame : IGameInstance {
     }
 
     public GameComRet ProcessCommand(int cmd_id, int[] args) {
-        /* disallowing any funny buisness with some basic sanitization */
-       
+        if (ended) return GameComRet.RET_ENDED;
+
         switch ((GameActions)cmd_id) {
         case GameActions.MOVE:
             return processMove(args);
@@ -79,10 +79,12 @@ class DeadwoodGame : IGameInstance {
             string player_name = p.getName();
             Console.WriteLine($"Player {player_name} got {score}!");
             // display score to ui?
+            ended = true;
         }
     }
 
     public void Setup(string[] players, CommandQueue ui_queue) {
+        ended = false;
         this.ui_queue = ui_queue;
         this.players = new Player[players.Length];
         for(int i = 0; i < players.Length; i++) {
@@ -134,6 +136,7 @@ class DeadwoodGame : IGameInstance {
         for (int i = 0; i < adj.Length; i++) 
             if (adj[i] == new_location) {
                 players[player_id].move(new_location);
+                ui_queue.push((int)ClientCommands.UPDATE_LOCATION, [player_id, new_location]);
                 return GameComRet.RET_SUCCESS;
             }
 
@@ -175,7 +178,8 @@ class DeadwoodGame : IGameInstance {
                 return GameComRet.RET_ERROR;
             }
         }
-            
+        
+        ui_queue.push((int)ClientCommands.UPDATE_ROLE, [player_id, player.getLocation(), role_to_take]);
         player.setRole(role_to_take);
         return GameComRet.RET_SUCCESS;
     }
@@ -195,6 +199,8 @@ class DeadwoodGame : IGameInstance {
         if (!players[player_id].upgrade(rank_num, type, cost))
             return GameComRet.RET_ERROR;
 
+        Player p = players[player_id];
+        ui_queue.push((int)ClientCommands.UPDATE_CURRENCY, [p.getDollars(), p.getCredits(), p.getTokens()]);
         return GameComRet.RET_SUCCESS;
     }
 
@@ -216,6 +222,9 @@ class DeadwoodGame : IGameInstance {
         }
 
         player.incTokens();
+        
+        Player p = players[player_id];
+        ui_queue.push((int)ClientCommands.UPDATE_CURRENCY, [p.getDollars(), p.getCredits(), p.getTokens()]);
         return GameComRet.RET_SUCCESS;
     }
 
@@ -257,18 +266,11 @@ class DeadwoodGame : IGameInstance {
             }
         }
 
+        Player p = players[player_id];
+        ui_queue.push((int)ClientCommands.UPDATE_CURRENCY, [p.getDollars(), p.getCredits(), p.getTokens()]);
         return GameComRet.RET_SUCCESS;
     }
-    private GameComRet sendTileInfo(int[] args) {
-        List<int> data = [players[args[0]].getLocation()];
-        foreach (int i in board.getAdjacent(data[0])) {
-            data.Add(i);
-        }
-
-        ui_queue.push((int)ClientCommands.REVEAL_NEIGHBORS, data.ToArray());
-
-        return GameComRet.RET_SUCCESS;
-    }
+    
 
     private void wrapScene(Tile tile) {
         SceneCard scene = tile.GetScene();
@@ -317,6 +319,7 @@ class DeadwoodGame : IGameInstance {
         foreach(Player p in players) {
             if (p.getLocation() == tile.location) {
                 p.setRole(-1);
+                ui_queue.push((int)ClientCommands.UPDATE_ROLE, [players.IndexOf(p), -1]);
             }
         }
         //remove scene
@@ -332,6 +335,17 @@ class DeadwoodGame : IGameInstance {
         if(activeScenes <= 1) {
             endDay();
         }
+    }
+
+    private GameComRet sendTileInfo(int[] args) {
+        List<int> data = [players[args[0]].getLocation()];
+        foreach (int i in board.getAdjacent(data[0])) {
+            data.Add(i);
+        }
+
+        ui_queue.push((int)ClientCommands.REVEAL_NEIGHBORS, data.ToArray());
+
+        return GameComRet.RET_SUCCESS;
     }
 
     private void endTurn() {

@@ -132,6 +132,16 @@ public enum ClientCommands {
     UPDATE_LOCATION,
 
     /*
+     * Change's player's role
+     * 
+     * Args:
+     *    0: player_id
+     *    1: location
+     *    2: new role
+     */
+    UPDATE_ROLE,
+
+    /*
      * Change player currency
      *
      * Args:

@@ -69,6 +69,7 @@ class Player
     }
 
     public void setRole(int role) {
+        rehearsal_tokens = 0;
         active_role = role;
     }
 

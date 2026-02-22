@@ -45,6 +45,7 @@ class DWConsoleUI : IGameUI {
 
     CommandQueue applicationQueue;
     ConsoleBoard cb;
+    ConsoleDeck cd;
     
     SelectorType selectorType;
     PromptType promptType;
@@ -54,6 +55,14 @@ class DWConsoleUI : IGameUI {
     int active_player;
 
     bool should_end;
+
+    public void Setup(CommandQueue applicationQueue) {
+        cb = ConsoleBoard.fromXML("res/gamedata/board.xml");
+        cd = ConsoleDeck.fromXML("res/gamedata/cards.xml");
+        all_players = [];
+        this.applicationQueue = applicationQueue;
+        showMainMenu();
+    }
 
     public void End() {
         Console.WriteLine("Thank you for playing!");
@@ -174,15 +183,18 @@ class DWConsoleUI : IGameUI {
             all_players.RemoveAt(selection);
             showMainMenu();
         } else if (selectorType == SelectorType.MOVE_TYPE) {
-            Console.Write(selection);
-            Thread.Sleep(1000);
+            Console.WriteLine(selection);
             if (selection == -1) {
                 showPlayerChoice("Move cancelled.\n");
                 return;
             }
             applicationQueue.push((int)GameActions.MOVE, [active_player, selection]);
         } else if (selectorType == SelectorType.TAKE_TYPE) {
-            throw new NotImplementedException();
+            Console.WriteLine(selection);
+            if (selection == -1) {
+                showPlayerChoice("Take cancelled.\n");
+                return;
+            }
         }
     }
 
@@ -211,13 +223,31 @@ class DWConsoleUI : IGameUI {
                 Console.WriteLine("InvalidInput. Idk what exactly but good luck.");
                 return;
             case (ClientCommands)UI_Commands.CMD_SUCCESS:
-                Console.WriteLine("Command executed successfully.");
+                //showPlayerChoice("Command Successful!\n");
                 return;
+            /* Networking is not implemented */
             case ClientCommands.ADD_REMOTE_PLAYER:
+            break;
             case ClientCommands.RM_REMOTE_PLAYER:
+            break;
             case ClientCommands.UPDATE_CURRENCY:
+                int player  = args[0];
+                int dollars = args[1];
+                int credits = args[2];
+                int r_tok   = args[3];
+
+                Console.WriteLine(all_players[player] + " now has $" + dollars + ", " + credits + "c, " + r_tok + " tokens"); 
+                break;
+            case ClientCommands.UPDATE_ROLE:
+                int location = args[1];
+                List<Role> roles = cb.GetRoles(args[1]);
+                roles.AddRange(cd.getRoles(cb.getTileCard(location)));
+                int role = args[2];
+                showPlayerChoice("Player " + all_players[args[0]] + " has taken roll " + roles[role].name);
+                break;
             case ClientCommands.UPDATE_LOCATION:
-                throw new NotImplementedException();
+                showPlayerChoice("Player " + all_players[args[0]] + " has moved to " + cb.getTileName(args[1]));
+                break;
             case ClientCommands.PLAYER_TURN:
                 active_player = args[0];
                 showPlayerChoice("");
@@ -239,12 +269,6 @@ class DWConsoleUI : IGameUI {
         }
     }
 
-    public void Setup(CommandQueue applicationQueue) {
-        cb = ConsoleBoard.fromXML("res/gamedata/board.xml");
-        all_players = [];
-        this.applicationQueue = applicationQueue;
-        showMainMenu();
-    }
 
     public bool ShouldEnd()
     {

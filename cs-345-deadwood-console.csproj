@@ -6,5 +6,8 @@
     <RootNamespace>cs_345_deadwood_console</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings> 
   </PropertyGroup>
-
+ 
+  <ItemGroup>
+    <None Update="res/**/*" CopyToOutputDirectory="PreserveNewest"/>
+  </ItemGroup>
 </Project>

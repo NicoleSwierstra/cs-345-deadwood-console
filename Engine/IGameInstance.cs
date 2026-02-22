@@ -7,7 +7,7 @@
  */
 
 public enum GameComRet {
-    RET_ERROR, RET_SUCCESS, RET_ENDED
+    RET_ERROR = -1, RET_SUCCESS, RET_ENDED
 }
 
 interface IGameInstance {

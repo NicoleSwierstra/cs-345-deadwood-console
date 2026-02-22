@@ -2,11 +2,9 @@
  * Deadwood Game
  */
 
-class DeadwoodGame : IGameInstance {
-    public enum Actions {
-        ID_MOVE = 0x10, ID_TAKE, ID_UPGRADE, ID_REHEARSE, ID_ACT, ID_FORCE_END
-    };
+namespace Deadwood;
 
+class DeadwoodGame : IGameInstance {
     private CommandQueue ui_queue;
     private int active_player;
     private Player[] players; //2-8 players
@@ -52,22 +50,24 @@ class DeadwoodGame : IGameInstance {
     public GameComRet ProcessCommand(int cmd_id, int[] args) {
         /* disallowing any funny buisness with some basic sanitization */
        
-        switch ((Actions)cmd_id) {
-        case Actions.ID_MOVE:
+        switch ((GameActions)cmd_id) {
+        case GameActions.MOVE:
             return processMove(args);
-        case Actions.ID_TAKE:
+        case GameActions.TAKE:
             return processTake(args);
-        case Actions.ID_UPGRADE:
+        case GameActions.UPGRADE:
             return processUpgrade(args);
-        case Actions.ID_ACT:
+        case GameActions.ACT:
             return processAct(args);
-        case Actions.ID_REHEARSE:
+        case GameActions.REHEARSE:
             return processRehearse(args);
-        case Actions.ID_FORCE_END:
+        case GameActions.TILEINFO:
+            return sendTileInfo(args);        
+        case GameActions.FORCE_END:
             End();
             return GameComRet.RET_ENDED;
         default:
-            return pass(cmd_id, args);
+            return GameComRet.RET_ERROR; /* pass(cmd_id, args); */
         }
     }
 
@@ -117,7 +117,7 @@ class DeadwoodGame : IGameInstance {
                 this.players[i].incCredits();
             }
             if (starting_rank > 1) {
-                this.players[i].upgrade(2, Player.UpgradeType.DOLLARS, 0);
+                this.players[i].upgrade(2, UpgradeType.DOLLARS, 0);
             }
         }
 
@@ -182,14 +182,14 @@ class DeadwoodGame : IGameInstance {
 
     private GameComRet processUpgrade(int[] args) {
         int player_id = args[0], rank_num = args[2];
-        Player.UpgradeType type = (Player.UpgradeType)args[1];
+        UpgradeType type = (UpgradeType)args[1];
         if (active_player != player_id) 
             return GameComRet.RET_ERROR;
         if (!board.isOffice(players[player_id].getLocation()))
             return GameComRet.RET_ERROR;
 
         int cost = rank_cost_credits[rank_num];
-        if (type == Player.UpgradeType.DOLLARS) 
+        if (type == UpgradeType.DOLLARS) 
             cost = rank_cost_dollars[rank_num];
 
         if (!players[player_id].upgrade(rank_num, type, cost))
@@ -256,6 +256,16 @@ class DeadwoodGame : IGameInstance {
                 player.incDollars(1);
             }
         }
+
+        return GameComRet.RET_SUCCESS;
+    }
+    private GameComRet sendTileInfo(int[] args) {
+        List<int> data = [players[args[0]].getLocation()];
+        foreach (int i in board.getAdjacent(data[0])) {
+            data.Add(i);
+        }
+
+        ui_queue.push((int)ClientCommands.REVEAL_NEIGHBORS, data.ToArray());
 
         return GameComRet.RET_SUCCESS;
     }
@@ -328,18 +338,24 @@ class DeadwoodGame : IGameInstance {
         players[active_player].endTurn();
         active_player++;
         active_player %= players.Length;
+        ui_queue.push((int)ClientCommands.PLAYER_TURN, [active_player]);
     }
 
     private void endDay() {
-        foreach(Player p in players) {
+        foreach (Player p in players) {
             p.setLocation(board.getTrailer());
             p.resetForDay();
         }
+
         foreach (Tile t in board.getTiles()) {
-            if(t.shots_remaining != -1) {   //is set
+            if (t.shots_remaining != -1) {   //is set
                 t.SetScene(deck.dealTop());
             } 
         }
+
+        active_player = 0;
+        ui_queue.push((int)ClientCommands.END_DAY, [current_day]);
+
         current_day++;
         if (current_day > game_length) {
             End();

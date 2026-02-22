@@ -1,4 +1,10 @@
+
+namespace Deadwood;
+
 class Deck {
+    /* this might be dangerous idk */
+    private static Dictionary<SceneCard, int> scene_ids;
+
     private SceneCard[] cards;
     static Random rand = new Random((int)DateTime.Now.Ticks);
     private int counter = 0;

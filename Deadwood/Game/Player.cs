@@ -1,10 +1,7 @@
+namespace Deadwood;
+
 class Player
 {
-    public enum UpgradeType {
-        DOLLARS,
-        CREDITS,
-    }
-
     private string name;
     private int rank;
     private int credits;

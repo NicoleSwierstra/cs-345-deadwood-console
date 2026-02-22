@@ -1,15 +1,16 @@
-class Board {
-    private Tile[] tiles; //12 tiles
-    private int trailer_location;
-    private int office_location;
 
-    private Board(Tile[] t, int t_loc, int o_loc) {
-        tiles = t;
-        trailer_location = t_loc;
-        office_location = o_loc;
+
+namespace Deadwood;
+class ConsoleBoard {
+    private Dictionary<int, string> names;
+    private List<Role>[] tile_extras;
+
+    private ConsoleBoard(Dictionary<int, string> d, List<Role>[] e) {
+        names = d;
+        tile_extras = e;
     }
 
-    public static Board fromXML(string filepath) {
+    public static ConsoleBoard fromXML(string filepath) {
         Dictionary<string, int> tilenums = new Dictionary<string, int>();
 
         XMLParser.XMLObj root = XMLParser.ReadFile(filepath);
@@ -25,7 +26,6 @@ class Board {
             );
         }
 
-        int trailer_loc = -1, office_loc = -1;
         List<int>[] n_neighbors = new List<int>[xmltiles.Count];
         List<Role>[] n_extras = new List<Role>[xmltiles.Count];
         int[] n_shots = new int[xmltiles.Count];
@@ -46,40 +46,25 @@ class Board {
             } else {
                 /* we know this must be a special tile */
                 n_shots[i] = -1;
-                if (xmltiles[i].tag == "trailer") {
-                    trailer_loc = i;
-                } else if (xmltiles[i].tag == "office") {
-                    office_loc = i;
-                } else {
-                    throw new Exception("Huh?");
-                }
             }
         }
 
-        Tile[] tiles = new Tile[xmltiles.Count];
-        for (int i = 0; i < xmltiles.Count; i++) {
-            tiles[i] = new Tile(i, n_neighbors[i].ToArray(), n_shots[i], n_extras[i].ToArray());
+        var names = new Dictionary<int, string>();
+        foreach (string s in tilenums.Keys){
+            names.Add(tilenums[s], s);
+        } 
+
+        return new ConsoleBoard(names, n_extras);
+    }
+    
+    public string getTileName(int tile){
+        return names[tile];
+    }
+
+    public int getTileIdx(string tile_name) {
+        foreach (int i in names.Keys) {
+            if (tile_name.Contains(names[i])) return i;
         }
-        return new Board(tiles, trailer_loc, office_loc);
-    }
-
-    public Tile getTile(int idx) {
-        return tiles[idx];
-    }
-
-    public Tile[] getTiles() {
-        return tiles;
-    }
-
-    public int[] getAdjacent(int tile) {
-        return tiles[tile].neighbors;
-    }
-
-    public bool isOffice(int space){
-        return space == office_location;
-    }
-
-    public int getTrailer() {
-        return trailer_location;
+        return -1;
     }
 }

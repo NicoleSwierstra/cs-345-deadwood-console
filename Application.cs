@@ -7,13 +7,15 @@
 class Application {
 
     /* in the future these could be dll files or something idk - dynamically loading the game would be kinda sick */
-    Type GAME_TYPE = typeof(DeadwoodGame);
-    Type UI_TYPE = typeof(DWConsoleUI);
+    Type GAME_TYPE = typeof(Deadwood.DeadwoodGame);
+    Type UI_TYPE = typeof(Deadwood.DWConsoleUI);
     
     public enum Commands {
-        ID_QUIT = 0x0,
-        ID_ADD_PLAYER,
-        ID_START,
+        QUIT = 0x0,
+        ADD_PLAYER,
+        REMOVE_PLAYER,
+        CLEAR_PLAYERS,
+        START,
     }
     
     IGameInstance game_backend;
@@ -27,6 +29,7 @@ class Application {
 
 
     public static void Main(string[] args) {
+        //UIPrompt.Test(args);
         new Application().Run();
     }
 
@@ -35,27 +38,38 @@ class Application {
         application_queue = new CommandQueue();
         ui_thread = new UIThread(UI_TYPE, ui_queue, application_queue).Start();
 
-        application_queue.push((int)Commands.ID_START, []);
         bool running = true;
         while (running) {
             if (!application_queue.empty()){
                 int id = application_queue.pop(out int[] args);
                 switch ((Commands)id) {
-                case Commands.ID_QUIT:
+                case Commands.QUIT:
                     ui_thread.Stop();
                     ui_thread.Join();
                     running = false; 
                     break;
-                case Commands.ID_ADD_PLAYER: 
-                    players.Add(CommandQueue.unpackString(args));
+                case Commands.ADD_PLAYER:
+                    string p_name = CommandQueue.unpackString(args);
+                    players.Add(p_name);
                     break;
-                case Commands.ID_START:
+                case Commands.CLEAR_PLAYERS:
+                    players.Clear();
+                    break;
+                case Commands.START:
                     game_backend = (IGameInstance)Activator.CreateInstance(GAME_TYPE);
                     game_backend.Setup(players.ToArray(), ui_queue);
                     break;
                 default:
-                    if (game_backend != null)
-                        game_backend.ProcessCommand((int)id, args);
+                    if (game_backend != null) {
+                        GameComRet r = game_backend.ProcessCommand((int)id, args);
+                        if (r == GameComRet.RET_ERROR)
+                            ui_queue.push((int)UI_Commands.CMD_FAILURE, []);
+                        else if (r == GameComRet.RET_SUCCESS)
+                            ui_queue.push((int)UI_Commands.CMD_SUCCESS, []);
+                        else if (r == GameComRet.RET_ENDED) {
+                            //ui_queue.push((int)UI_Commands.) IDK TBH
+                        }
+                    }
                     break;
                 }
             }

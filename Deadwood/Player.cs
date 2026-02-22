@@ -11,7 +11,7 @@ class Player
     private int dollars;
     private int rehearsal_tokens;
     private int location;
-    private int active_role;
+    private int active_role;    // no role: -1, off-card: 0 <= extras.Length - 1, on-card onwards
     private bool has_moved;
 
     public Player(string name)
@@ -50,10 +50,37 @@ class Player
     public void incCredits() {
         credits++;
     }
+
+    public void incTokens() {
+        rehearsal_tokens++;
+    }
+
+    public void incDollars(int amount) {
+        dollars += amount;
+    }
+
+    //reset fields for next day
+    public void resetForDay() {
+        active_role = -1;
+        rehearsal_tokens = 0;
+        has_moved = false;
+    }
     
     /* everything that happens once a turn has ended */
     public void endTurn() {
         has_moved = false;
+    }
+
+    public void setRole(int role) {
+        active_role = role;
+    }
+
+    public void setLocation(int loc) {
+        location = loc;
+    }
+
+    public int getTokens() {
+        return rehearsal_tokens;
     }
 
     public string getName() {
@@ -66,5 +93,17 @@ class Player
 
     public int getRole() {
         return active_role;
+    }
+
+    public int getRank() {
+        return rank;
+    }
+
+    public int getCredits() {
+        return credits;
+    }
+    
+    public int getDollars() {
+        return dollars;
     }
 }

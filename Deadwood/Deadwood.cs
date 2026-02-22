@@ -15,6 +15,10 @@ class DeadwoodGame : IGameInstance {
 
     private int current_day;
 
+    private int game_length;
+
+    static Random rand = new Random();
+
     /* ===== game consts ===== */
     /* TODO: these are stored in the xml for the board for some reason. Parse those Ig */
     readonly int[] rank_cost_dollars = [
@@ -52,13 +56,13 @@ class DeadwoodGame : IGameInstance {
         case Actions.ID_MOVE:
             return processMove(args);
         case Actions.ID_TAKE:
-            return processMove(args);
+            return processTake(args);
         case Actions.ID_UPGRADE:
-            return processMove(args);
+            return processUpgrade(args);
         case Actions.ID_ACT:
-            return processMove(args);
+            return processAct(args);
         case Actions.ID_REHEARSE:
-            return processMove(args);
+            return processRehearse(args);
         case Actions.ID_FORCE_END:
             End();
             return GameComRet.RET_ENDED;
@@ -68,6 +72,14 @@ class DeadwoodGame : IGameInstance {
     }
 
     public void End() {
+        foreach(Player p in players) {
+            int score = p.getDollars() + p.getCredits() + (5* p.getRank());
+
+            //temp
+            string player_name = p.getName();
+            Console.WriteLine($"Player {player_name} got {score}!");
+            // display score to ui?
+        }
     }
 
     public void Setup(string[] players, CommandQueue ui_queue) {
@@ -79,6 +91,35 @@ class DeadwoodGame : IGameInstance {
 
         deck = Deck.fromXML("res/gamedata/cards.xml").shuffled(); /* shuffled only once at the beginning of the game */
         board = Board.fromXML("res/gamedata/board.xml");
+
+        int num_players = players.Length;
+        int starting_credits = 0;
+        int starting_rank = 1;
+        if (num_players == 2 || num_players == 3) {
+            game_length = 3;
+        } else if (num_players == 4) {
+            game_length = 4;
+        } else if (num_players == 5) {
+            starting_credits = 2;
+            game_length = 4;
+        } else if (num_players == 6) {
+            starting_credits = 4;
+            game_length = 4;
+        } else if (num_players == 7 || num_players == 8) {
+            game_length = 4;
+            starting_rank = 2;
+        } else {
+            throw new ArgumentOutOfRangeException("players", "Player count must be between 2 and 8.");
+        }
+
+        for (int i = 0; i < this.players.Length; i++) {
+            for (int c = 0; c < starting_credits; c++) {
+                this.players[i].incCredits();
+            }
+            if (starting_rank > 1) {
+                this.players[i].upgrade(2, Player.UpgradeType.DOLLARS, 0);
+            }
+        }
 
         endDay();
     }
@@ -99,11 +140,43 @@ class DeadwoodGame : IGameInstance {
         return GameComRet.RET_ERROR;
     }
 
+    //args[0] = player_id | args[1] = role_to_take
     private GameComRet processTake(int[] args) {
-        int player_id = args[0], role_to_take = args[1];
+        int player_id = args[0], role_to_take= args[1];
         if (active_player != player_id) 
             return GameComRet.RET_ERROR;
 
+        Player player = players[player_id];
+
+        //player already has a role
+        if (player.getRole() != -1) {   
+            return GameComRet.RET_ERROR;
+        }
+
+        Tile tile = board.getTile(player.getLocation());
+        if (tile.GetScene() == null) {
+            return GameComRet.RET_ERROR;        
+        }
+
+        Role[] extras = tile.GetExtras();
+        Role role;
+        //role index offset (0 - extras.Length) = off-card, beyond that = on-card
+        if (role_to_take < extras.Length) {
+            role = extras[role_to_take];
+        } else {
+            role = tile.GetScene().getRoles()[role_to_take - extras.Length];
+        }
+        if (player.getRank() < role.rank) {
+            return GameComRet.RET_ERROR;      
+        }
+
+        foreach(Player p in players) {
+            if (p.getRole() == role_to_take) {
+                return GameComRet.RET_ERROR;
+            }
+        }
+            
+        player.setRole(role_to_take);
         return GameComRet.RET_SUCCESS;
     }
 
@@ -130,12 +203,125 @@ class DeadwoodGame : IGameInstance {
         if (active_player != player_id) 
             return GameComRet.RET_ERROR;
 
+        Player player = players[player_id];
+        // no role check
+        if (player.getRole() == -1) {
+            return GameComRet.RET_ERROR;
+        }
+
+        // guaranteed success check
+        int budget = board.getTile(player.getLocation()).GetScene().budget;
+        if (player.getTokens() >= budget -1) {
+            return GameComRet.RET_ERROR;    //must act
+        }
+
+        player.incTokens();
         return GameComRet.RET_SUCCESS;
     }
 
     private GameComRet processAct(int[] args) {
         int player_id = args[0], dice_roll = args[1];
+        if (active_player != player_id) {
+            return GameComRet.RET_ERROR;
+        }
+        Player player = players[player_id];
+        if (player.getRole() == -1) {
+            return GameComRet.RET_ERROR;
+        }
+
+        int roll = dice_roll + player.getTokens();
+        Tile tile = board.getTile(player.getLocation());
+        SceneCard scene = tile.GetScene();
+
+        //off-card/on-card check
+        bool on_card = true;
+        if (player.getRole() < tile.GetExtras().Length) { //off-card
+            on_card = false;
+        }
+        if (roll >= scene.budget) { //success
+            tile.shots_remaining--;
+            if (on_card) {
+                player.incCredits();
+                player.incCredits();
+            } else {                //off-card success
+                player.incCredits();
+                player.incDollars(1);
+            }
+            if (tile.shots_remaining == 0) {
+                wrapScene(tile);
+            }
+            
+        } else {
+            if (!on_card) {
+                player.incDollars(1);
+            }
+        }
+
         return GameComRet.RET_SUCCESS;
+    }
+
+    private void wrapScene(Tile tile) {
+        SceneCard scene = tile.GetScene();
+        Role[] extras = tile.GetExtras();
+        Role[] onCardRoles = scene.getRoles();
+        bool hasOnCard = false;
+
+        //check on-card players
+        foreach (Player p in players) {
+            if (p.getLocation() == tile.location && p.getRole() >= extras.Length && p.getRole() != -1) {
+                hasOnCard = true;
+                break;
+            }
+        }
+        if (hasOnCard) {
+            //roll dice and sort descending order
+            int[] dice = new int[scene.budget];
+            for (int i = 0; i < dice.Length; i++) {
+                dice[i] = rand.Next(1, 7);
+            }
+            Array.Sort(dice);
+            Array.Reverse(dice);
+
+            int[] payouts = new int[onCardRoles.Length];
+            for (int i = 0; i < dice.Length; i++) {
+                payouts[i % onCardRoles.Length] += dice[i];
+            }
+
+            //on-card players
+            foreach(Player p in players) {
+                //on-card offset
+                if (p.getLocation() == tile.location && p.getRole() >= extras.Length && p.getRole() != -1) {
+                    p.incDollars(payouts[p.getRole() - extras.Length]);
+                }
+            }
+            foreach(Player p in players) {
+                //off-card offset
+                if (p.getLocation() == tile.location && p.getRole() >= 0 && p.getRole() < extras.Length) {
+                    p.incDollars(extras[p.getRole()].rank);
+                }
+            }
+
+            
+        }
+        //clear roles
+        foreach(Player p in players) {
+            if (p.getLocation() == tile.location) {
+                p.setRole(-1);
+            }
+        }
+        //remove scene
+        tile.SetScene(null);
+
+        //check for endDay
+        int activeScenes = 0;
+        foreach(Tile t in board.getTiles()) {
+            if (t.GetScene() != null) {
+                activeScenes++;
+            }
+        }
+        if(activeScenes <= 1) {
+            endDay();
+        }
     }
 
     private void endTurn() {
@@ -145,6 +331,18 @@ class DeadwoodGame : IGameInstance {
     }
 
     private void endDay() {
-        // TODO: change location of all players, 
+        foreach(Player p in players) {
+            p.setLocation(board.getTrailer());
+            p.resetForDay();
+        }
+        foreach (Tile t in board.getTiles()) {
+            if(t.shots_remaining != -1) {   //is set
+                t.SetScene(deck.dealTop());
+            } 
+        }
+        current_day++;
+        if (current_day > game_length) {
+            End();
+        } 
     }
 }

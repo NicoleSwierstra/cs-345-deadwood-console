@@ -64,6 +64,14 @@ class Board {
         return new Board(tiles, trailer_loc, office_loc);
     }
 
+    public Tile getTile(int idx) {
+        return tiles[idx];
+    }
+
+    public Tile[] getTiles() {
+        return tiles;
+    }
+
     public int[] getAdjacent(int tile) {
         return tiles[tile].neighbors;
     }

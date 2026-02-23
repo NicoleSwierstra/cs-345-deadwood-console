@@ -2,7 +2,7 @@
  * Nicole Swierstra
  * 
  * A class that contains constants for the client and game to talk to each other. Also doubles as command documentation.
- * I call this programming paradigm "network oriented programming"
+ * This is really "network oriented programming" lol.
  */
 
 namespace Deadwood;
@@ -54,12 +54,19 @@ public enum GameActions {
     ACT,
 
     /*
+     * Command that signals the player wants to end their turn. 
+     *
+     *
+     */
+    END_TURN,
+
+    /*
      * Util command that sends information about the current tile a player is on
      * 
      * Args: 
      *    0: player_id
      */
-    TILEINFO,
+    TILE_INFO,
 
     /*
      * Util command to get the card info of the tile the player is on. 
@@ -149,6 +156,7 @@ public enum ClientCommands {
      *    1: player's dollars
      *    2: player's credits
      *    3: player's rehersal tokens
+     *    4: player's rank
      */
     UPDATE_CURRENCY,
     
@@ -166,4 +174,5 @@ public enum ClientCommands {
     END_GAME,
 }
 
+public enum DataChangeReason { UPGRADE, REHEARSAL, ACT_SUCCESS, ACT_FAILURE, ACT_WRAP }
 public enum UpgradeType { DOLLARS, CREDITS }

@@ -2,22 +2,29 @@
 namespace Deadwood;
 
 class Deck {
+    private Dictionary<SceneCard, int> ids;
+
     private SceneCard[] cards;
     static Random rand = new Random((int)DateTime.Now.Ticks);
     private int counter = 0;
     
     private Deck(SceneCard[] c) {
         cards = c;
+        int i = 0;
+        ids = new Dictionary<SceneCard, int>();
+        foreach (SceneCard sc in c) {
+            ids.Add(sc, i);
+            i++;
+        }
     }
 
     public static Deck fromXML(string filepath) {
-
         XMLParser.XMLObj root = XMLParser.ReadFile(filepath);
         List<XMLParser.XMLObj> children = root.children;
         SceneCard[] cardArray = new SceneCard[children.Count];
 
         // get card elements and set fields
-        for (int i = 0 ; i < children.Count; i++) {
+        for (int i = 0; i < children.Count; i++) {
             string name = children[i].attribs["name"];
             string desc = children[i].children.Find(x => x.tag == "scene").contents;
             int budget = int.Parse(children[i].attribs["budget"]);
@@ -37,10 +44,13 @@ class Deck {
             // build SceneCard
             SceneCard card = new SceneCard(name, desc, budget, roles.ToArray());
             cardArray[i] = card;
-            
         } 
 
         return new Deck(cardArray);
+    }
+
+    public int idOf(SceneCard card) {
+        return ids[card];
     }
 
     /* silly little shuffling function */

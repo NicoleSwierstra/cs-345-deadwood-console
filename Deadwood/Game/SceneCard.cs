@@ -2,9 +2,9 @@
 namespace Deadwood;
 class SceneCard
 {
-    public string name;
-    public string desc;
-    public int budget;
+    private string name;
+    private string desc;
+    private int budget;
     private Role[] roles;
 
     public SceneCard(string name, string desc, int budget, Role[] roles)
@@ -22,5 +22,17 @@ class SceneCard
     public override string ToString()
     {
         return "{\"" +name + ": " + desc + "\"}";
+    }
+
+    public string getName() {
+        return name;
+    }
+
+    public string getDesc() {
+        return desc;
+    }
+
+    public int getBudget() {
+        return budget;
     }
 }

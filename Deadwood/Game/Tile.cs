@@ -29,6 +29,14 @@ class Tile {
         return extras;
     }
 
+    public bool isSet() {
+        return total_shots != -1;
+    }
+
+    public void Reset() {
+        shots_remaining = total_shots;
+    }
+
     public override string ToString() {
         string s = "{" + location + ", " + total_shots + ", {" + neighbors[0];
         for(int i = 1; i < neighbors.Length; i++) s += ", " + neighbors[i];

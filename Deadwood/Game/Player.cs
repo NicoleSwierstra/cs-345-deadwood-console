@@ -104,4 +104,8 @@ class Player
     public int getDollars() {
         return dollars;
     }
+
+    public int getScore() {
+        return dollars + credits + (5 * rank);
+    }
 }

@@ -42,7 +42,7 @@ class ConsoleDeck {
         return new ConsoleDeck(cardArray, nameArray);
     }
 
-    public string getName(int card) {
+    public string getCardName(int card) {
         return scene_names[card]; 
     }
 

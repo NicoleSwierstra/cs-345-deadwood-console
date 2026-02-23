@@ -21,6 +21,7 @@ class DeadwoodGame : IGameInstance {
     /* TODO: these are stored in the xml for the board for some reason. Parse those Ig */
     readonly int[] rank_cost_dollars = [
         0,
+        0,
         4,
         10,
         18,
@@ -29,6 +30,7 @@ class DeadwoodGame : IGameInstance {
     ];
 
     readonly int[] rank_cost_credits = {
+        0,
         0,
         5,
         10,
@@ -61,8 +63,16 @@ class DeadwoodGame : IGameInstance {
             return processAct(args);
         case GameActions.REHEARSE:
             return processRehearse(args);
-        case GameActions.TILEINFO:
-            return sendTileInfo(args);        
+        case GameActions.END_TURN:
+            if (active_player == args[0]) {
+                endTurn();
+                return GameComRet.RET_SUCCESS;
+            }
+            return GameComRet.RET_ERROR;
+        case GameActions.TILE_INFO:
+            return sendTileInfo(args);
+        case GameActions.CARD_INFO:
+            return sendCardInfo(args);        
         case GameActions.FORCE_END:
             End();
             return GameComRet.RET_ENDED;
@@ -72,15 +82,8 @@ class DeadwoodGame : IGameInstance {
     }
 
     public void End() {
-        foreach(Player p in players) {
-            int score = p.getDollars() + p.getCredits() + (5* p.getRank());
-
-            //temp
-            string player_name = p.getName();
-            Console.WriteLine($"Player {player_name} got {score}!");
-            // display score to ui?
-            ended = true;
-        }
+        ui_queue.push((int)ClientCommands.END_GAME, new List<Player>(players).Select(p => p.getScore()).ToArray());
+        ended = true;
     }
 
     public void Setup(string[] players, CommandQueue ui_queue) {
@@ -132,12 +135,16 @@ class DeadwoodGame : IGameInstance {
         if (active_player != player_id) 
             return GameComRet.RET_ERROR;
         int[] adj = board.getAdjacent(players[player_id].getLocation());
+
+        if (players[player_id].getRole() != -1)
+            return GameComRet.RET_ERROR;
         
         for (int i = 0; i < adj.Length; i++) 
             if (adj[i] == new_location) {
-                players[player_id].move(new_location);
-                ui_queue.push((int)ClientCommands.UPDATE_LOCATION, [player_id, new_location]);
-                return GameComRet.RET_SUCCESS;
+                if (players[player_id].move(new_location)) {
+                    ui_queue.push((int)ClientCommands.UPDATE_LOCATION, [player_id, new_location]);
+                    return GameComRet.RET_SUCCESS;
+                }
             }
 
         return GameComRet.RET_ERROR;
@@ -146,8 +153,9 @@ class DeadwoodGame : IGameInstance {
     //args[0] = player_id | args[1] = role_to_take
     private GameComRet processTake(int[] args) {
         int player_id = args[0], role_to_take= args[1];
-        if (active_player != player_id) 
+        if (active_player != player_id) {
             return GameComRet.RET_ERROR;
+        } 
 
         Player player = players[player_id];
 
@@ -174,13 +182,14 @@ class DeadwoodGame : IGameInstance {
         }
 
         foreach(Player p in players) {
-            if (p.getRole() == role_to_take) {
+            if (p.getRole() == role_to_take && p.getLocation() == player.getLocation()) {
                 return GameComRet.RET_ERROR;
             }
         }
         
         ui_queue.push((int)ClientCommands.UPDATE_ROLE, [player_id, player.getLocation(), role_to_take]);
         player.setRole(role_to_take);
+        endTurn();
         return GameComRet.RET_SUCCESS;
     }
 
@@ -200,7 +209,7 @@ class DeadwoodGame : IGameInstance {
             return GameComRet.RET_ERROR;
 
         Player p = players[player_id];
-        ui_queue.push((int)ClientCommands.UPDATE_CURRENCY, [p.getDollars(), p.getCredits(), p.getTokens()]);
+        ui_queue.push((int)ClientCommands.UPDATE_CURRENCY, [player_id, p.getDollars(), p.getCredits(), p.getTokens(), p.getRank(), (int)DataChangeReason.UPGRADE]);
         return GameComRet.RET_SUCCESS;
     }
 
@@ -216,7 +225,7 @@ class DeadwoodGame : IGameInstance {
         }
 
         // guaranteed success check
-        int budget = board.getTile(player.getLocation()).GetScene().budget;
+        int budget = board.getTile(player.getLocation()).GetScene().getBudget();
         if (player.getTokens() >= budget -1) {
             return GameComRet.RET_ERROR;    //must act
         }
@@ -224,7 +233,15 @@ class DeadwoodGame : IGameInstance {
         player.incTokens();
         
         Player p = players[player_id];
-        ui_queue.push((int)ClientCommands.UPDATE_CURRENCY, [p.getDollars(), p.getCredits(), p.getTokens()]);
+        ui_queue.push((int)ClientCommands.UPDATE_CURRENCY, [
+            player_id, 
+            p.getDollars(), 
+            p.getCredits(), 
+            p.getTokens(), 
+            p.getRank(), 
+            (int)DataChangeReason.REHEARSAL
+        ]);
+        endTurn();
         return GameComRet.RET_SUCCESS;
     }
 
@@ -241,13 +258,14 @@ class DeadwoodGame : IGameInstance {
         int roll = dice_roll + player.getTokens();
         Tile tile = board.getTile(player.getLocation());
         SceneCard scene = tile.GetScene();
+        Player p = players[player_id];
 
         //off-card/on-card check
         bool on_card = true;
         if (player.getRole() < tile.GetExtras().Length) { //off-card
             on_card = false;
         }
-        if (roll >= scene.budget) { //success
+        if (roll >= scene.getBudget()) { //success
             tile.shots_remaining--;
             if (on_card) {
                 player.incCredits();
@@ -256,18 +274,18 @@ class DeadwoodGame : IGameInstance {
                 player.incCredits();
                 player.incDollars(1);
             }
+            ui_queue.push((int)ClientCommands.UPDATE_CURRENCY, [player_id, p.getDollars(), p.getCredits(), p.getTokens(), p.getRank(), (int)DataChangeReason.ACT_SUCCESS]);
             if (tile.shots_remaining == 0) {
                 wrapScene(tile);
             }
-            
         } else {
             if (!on_card) {
                 player.incDollars(1);
             }
+            ui_queue.push((int)ClientCommands.UPDATE_CURRENCY, [player_id, p.getDollars(), p.getCredits(), p.getTokens(), p.getRank(), (int)DataChangeReason.ACT_FAILURE]);
         }
 
-        Player p = players[player_id];
-        ui_queue.push((int)ClientCommands.UPDATE_CURRENCY, [p.getDollars(), p.getCredits(), p.getTokens()]);
+        endTurn();
         return GameComRet.RET_SUCCESS;
     }
     
@@ -287,7 +305,7 @@ class DeadwoodGame : IGameInstance {
         }
         if (hasOnCard) {
             //roll dice and sort descending order
-            int[] dice = new int[scene.budget];
+            int[] dice = new int[scene.getBudget()];
             for (int i = 0; i < dice.Length; i++) {
                 dice[i] = rand.Next(1, 7);
             }
@@ -312,14 +330,13 @@ class DeadwoodGame : IGameInstance {
                     p.incDollars(extras[p.getRole()].rank);
                 }
             }
-
-            
         }
         //clear roles
         foreach(Player p in players) {
             if (p.getLocation() == tile.location) {
                 p.setRole(-1);
-                ui_queue.push((int)ClientCommands.UPDATE_ROLE, [players.IndexOf(p), -1]);
+                ui_queue.push((int)ClientCommands.UPDATE_CURRENCY, [players.IndexOf(p), p.getDollars(), p.getCredits(), p.getTokens(), p.getRank(), (int)DataChangeReason.ACT_WRAP]);
+                ui_queue.push((int)ClientCommands.UPDATE_ROLE, [players.IndexOf(p), p.getLocation(), -1]);
             }
         }
         //remove scene
@@ -348,6 +365,16 @@ class DeadwoodGame : IGameInstance {
         return GameComRet.RET_SUCCESS;
     }
 
+    private GameComRet sendCardInfo(int[] args) {
+        int location = players[args[0]].getLocation();
+        if (!board.getTile(location).isSet())
+            ui_queue.push((int)ClientCommands.REVEAL_CARD, [location, -1]);
+        else
+            ui_queue.push((int)ClientCommands.REVEAL_CARD, [location, deck.idOf(board.getActiveScene(location))] );
+
+        return GameComRet.RET_SUCCESS;
+    }
+
     private void endTurn() {
         players[active_player].endTurn();
         active_player++;
@@ -362,7 +389,8 @@ class DeadwoodGame : IGameInstance {
         }
 
         foreach (Tile t in board.getTiles()) {
-            if (t.shots_remaining != -1) {   //is set
+            t.Reset();
+            if (t.isSet()) {   //is set
                 t.SetScene(deck.dealTop());
             } 
         }

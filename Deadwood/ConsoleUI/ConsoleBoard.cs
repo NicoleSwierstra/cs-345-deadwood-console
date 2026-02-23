@@ -10,9 +10,7 @@ class ConsoleBoard {
         names = d;
         tile_extras = e;
         tile_cards = new int[names.Count];
-        for (int i = 0; i < names.Count; i++) {
-            tile_cards[i] = -1;
-        } 
+        resetCards(); 
     }
 
     public static ConsoleBoard fromXML(string filepath) {
@@ -79,6 +77,12 @@ class ConsoleBoard {
             if (tile_name.Contains(names[i])) return i;
         }
         return -1;
+    }
+
+    public void resetCards() {
+        for (int i = 0; i < tile_cards.Length; i++) {
+            tile_cards[i] = -1;
+        }
     }
 
     public List<Role> GetRoles(int tile) {

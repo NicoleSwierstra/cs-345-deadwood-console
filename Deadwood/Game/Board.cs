@@ -64,6 +64,10 @@ class Board {
         return new Board(tiles, trailer_loc, office_loc);
     }
 
+    public SceneCard getActiveScene(int loc) {
+        return tiles[loc].active_scene;
+    }
+
     public Tile getTile(int idx) {
         return tiles[idx];
     }

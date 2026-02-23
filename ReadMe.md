@@ -16,10 +16,14 @@ The architecture of the program is really more designed to have a persistant UI 
 
 There are two threads, the application thread, and the ui thread. These threads are completely seperate, spare for two queue objects that link them together. The queues pass commands, as defined in the file "deadwood defines", along with their parameters. This mostly follows the "MVC" style, except that it is more of a "MV", with the controller just being constructed from the commands passed back and forth.
 
+Here is the class diagram:
+
+![class diagram](https://github.com/NicoleSwierstra/cs-345-deadwood-console/blob/main/ClassDiagram.svg)
+
 There are two real motivators that made me design the overall engine in the way that it is designed:
 
-    1. Wanting different games with different rulesets to be able to be run inside of the same engine. (honestly more of an ego thing and really less important.)
-    2. Able to be played through different means, like a console, a ui, or even as a fully remote player on a different device.
+1. Wanting different games with different rulesets to be able to be run inside of the same engine. (honestly more of an ego thing and really less important.)
+2. Able to be played through different means, like a console, a ui, or even as a fully remote player on a different device.
 
 As consequence, nothing executing commands actually knows what sent it the commands, and neither the application thread nor ui thread actually know the contents of what they are running. There is basically 0 coupling throught the entire program, and everything is being passed as loosely as possible. In theory this is a good thing for extensibility.
 

@@ -17,7 +17,8 @@ class PlayerNode {
 
     /* data */
     bool in_role;
-    
+    int location = 10;
+
     public PlayerNode(string name, int col, bool rem) {
         Name = name; 
         color = col;
@@ -36,6 +37,15 @@ class PlayerNode {
 
     public bool inRole() { 
         return this.in_role;
+    }
+
+    /* bodged in so last minute lmao */
+    public int getLocation() {
+        return location;
+    }
+
+    public void setLocation(int n_loc) {
+        location = n_loc;
     }
 }
 
@@ -119,7 +129,7 @@ class DWConsoleUI : IGameUI {
             m + "\t[upgrade] player\x1b[0m\n" + 
             r + "\t[rehearse] role\x1b[0m\n" + 
             r + "\t[act] in role\x1b[0m\n" +
-            "\t[end turn]\n\t[end game]\n\t";
+            "\t[end turn]\n\t[end game]\n\t[info] of all players\n";
 
         current_prompt = UIPrompt.fromMsg(message);
     }
@@ -287,6 +297,15 @@ class DWConsoleUI : IGameUI {
                 case "end game":
                     applicationQueue.push((int)GameActions.FORCE_END, []);
                     break;
+                case "info":
+                    string infostr = "\n";
+                    foreach(PlayerNode pn in all_players) {
+                        infostr += (pn == all_players[active_player]) ? "* " : "- ";
+                        infostr += $"{pn} is at {cb.getTileName(pn.getLocation())}\n";
+                    }
+                    Console.WriteLine(infostr);
+                    current_prompt.Clear();
+                    break;
                 default:
                     Console.WriteLine("\rInvalid Arg!");
                     current_prompt.Clear();
@@ -390,6 +409,7 @@ class DWConsoleUI : IGameUI {
                 }
                 break;
             case ClientCommands.UPDATE_LOCATION:
+                all_players[args[0]].setLocation(args[1]);
                 updateStr = "Player " + all_players[args[0]] + " has moved to " + cb.getTileName(args[1]) + "\n"; 
                 if (args[0] == active_player)
                     showPlayerChoice(updateStr);

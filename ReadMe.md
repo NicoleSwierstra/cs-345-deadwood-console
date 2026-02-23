@@ -34,5 +34,6 @@ There are tradeoffs to developing this way. To look at the solid design principl
 
 To maintain parity between the instances data is only serialized in one place. The definition for how much an upgrade costs is in the deadwood class. Yes, this should be parsed in real time, but if I personally was doing it I'd move the upgrade definitions into a new xml file. Having the board also be responsible for checking upgrades seems a bit odd. Although I can imagine in a more traditional object oriented implementation, made under different constraints and with different motivating factors, the tile would be an abstract class and the behavior of that tile would be implemented inside of the tile. This would be a bit of a nightmare scenerio for networking tho.
 
+Bit of an absolute nighmare to debug tho
 
 \- Nicole

@@ -3,8 +3,6 @@ namespace Deadwood;
 class ConsoleDeck {
     private List<Role>[] cards;
     private string[] scene_names;
-    static Random rand = new Random((int)DateTime.Now.Ticks);
-    private int counter = 0;
     
     private ConsoleDeck(List<Role>[] c, string[] n) {
         cards = c;

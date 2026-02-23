@@ -83,7 +83,6 @@ class DWConsoleUI : IGameUI {
 
     bool should_end;
 
-    bool acting;
     const float DICE_TIME_MULTIPLIER = 300;
     const int DICE_ROLLS = 25;
     Random diceRand = new Random(unchecked(((int)DateTime.Now.Ticks) * 389));
@@ -223,7 +222,6 @@ class DWConsoleUI : IGameUI {
             showMainMenu();
         } else if (promptType == PromptType.GAME_COMMAND) {
             PlayerNode player = all_players[active_player];
-            acting = false;
             switch (prompt.ToLower()) {
                 case "move":
                     if(player.inRole()) {
@@ -289,7 +287,6 @@ class DWConsoleUI : IGameUI {
                         Thread.Sleep((int)(t * t * DICE_TIME_MULTIPLIER));
                     }
                     applicationQueue.push((int)GameActions.ACT, [active_player, roll + 1]);
-                    acting = true;
                     break;
                 case "end turn":
                     applicationQueue.push((int)GameActions.END_TURN, [active_player]);
